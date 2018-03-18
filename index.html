@@ -6,6 +6,23 @@
   <link rel="stylesheet" href="css/styles.css">
   <title>Restaurant Reviews</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="manifest" href="manifest.json">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="Restaurant Reviews">
+  <meta name="apple-mobile-web-app-title" content="Restaurant Reviews">
+  <meta name="theme-color" content="#262830">
+  <meta name="msapplication-navbutton-color" content="#262830">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="msapplication-starturl" content="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <link rel="icon" type="image/png" sizes="192x192" href="./assets/logo_192.png">
+  <link rel="apple-touch-icon" type="image/png" sizes="192x192" href="./assets/logo_192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="./assets/logo_512.png">
+  <link rel="apple-touch-icon" type="image/png" sizes="512x512" href="./assets/logo_512.png">
 </head>
 
 <body>
@@ -17,15 +34,30 @@
 
   <main id="maincontent">
     <section id="map-container">
-      <div id="map" role="application" aria-label="Google Maps showing selected restaurants on the map."></div>
+      <div
+        id="map"
+        role="application"
+        aria-label="Google Maps showing selected restaurants on the map."
+      >
+      </div>
     </section>
     <section>
       <div class="filter-options">
         <h2>Filter Results</h2>
-        <select id="neighborhoods-select" name="neighborhoods" onchange="updateRestaurants()">
+        <select
+          id="neighborhoods-select"
+          aria-label="select neighbourhood"
+          name="neighborhoods"
+          onchange="updateRestaurants()"
+        >
           <option value="all">All Neighborhoods</option>
         </select>
-        <select id="cuisines-select" name="cuisines" onchange="updateRestaurants()">
+        <select
+          id="cuisines-select"
+          aria-label="select cuisine"
+          name="cuisines"
+          onchange="updateRestaurants()"
+        >
           <option value="all">All Cuisines</option>
         </select>
       </div>
@@ -33,6 +65,7 @@
     </section>
   </main>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.6.0/localforage.min.js"></script>
   <script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>
   <script type="application/javascript" charset="utf-8" src="js/main.js"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCkbztsWNDsTjRDgoH1Za6dYNR-GMwTkqY&libraries=places&callback=initMap"></script>
