@@ -2,6 +2,7 @@
 
 <img src="https://s3.eu-west-2.amazonaws.com/nmarcora/project-stage2.png">
 
+
 ## How to run it?
 - Just open up your local server of choice on port 8000
 
