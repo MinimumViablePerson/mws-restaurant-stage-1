@@ -13,4 +13,4 @@ npm start
 
 ## Auditing
 
-Please audit this site using the `audit` tab on Chrome's DevTools to avoid having extensions interefere with the tests.
+Please audit this site using the `audit` tab on Chrome's DevTools in `Incognito` mode to avoid having extensions interefere with the tests.
