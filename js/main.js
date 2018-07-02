@@ -20,9 +20,12 @@ const photographAlts = {
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
-document.addEventListener('DOMContentLoaded', (event) => {
+document.addEventListener('DOMContentLoaded', () => {
   fetchNeighborhoods();
   fetchCuisines();
+  updateRestaurants();
+  const mapOpenButton = document.querySelector('#map-open-button');
+  mapOpenButton.addEventListener('click', initMap);
 });
 
 /**
@@ -94,6 +97,12 @@ window.initMap = () => {
     scrollwheel: false
   });
   updateRestaurants();
+
+  const mapElement = document.querySelector('#map');
+  const mapOpenButton = document.querySelector('#map-open-button');
+
+  mapElement.classList.add('open')
+  mapOpenButton.remove();
 }
 
 /**
@@ -155,9 +164,9 @@ createRestaurantHTML = (restaurant) => {
 
   const image = document.createElement('img');
   image.classList.add('restaurant-img');
-  // image.classList.add('restaurant-img', 'hidden');
-  image.src = DBHelper.imageUrlForRestaurant(restaurant);
+  image.dataset.src = DBHelper.imageUrlForRestaurant(restaurant);
   image.alt = photographAlts[restaurant.id];
+  io.observe(image)
   li.append(image);
 
   const name = document.createElement('h2');
@@ -184,6 +193,8 @@ createRestaurantHTML = (restaurant) => {
  * Add markers for current restaurants to the map.
  */
 addMarkersToMap = (restaurants = self.restaurants) => {
+  if (!google) return;
+
   restaurants.forEach(restaurant => {
     // Add marker to the map
     const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
@@ -194,24 +205,10 @@ addMarkersToMap = (restaurants = self.restaurants) => {
   });
 }
 
-
-if (navigator.serviceWorker) {
-  navigator.serviceWorker.register('sw.js')
-    .then(() => console.log('SW is alive! Yippee!'))
-};
-
-// const io = new IntersectionObserver(entries => {
-//   for (const entry of entries) {
-//     console.log('hide!')
-//     // entry.target.classList.remove('hidden')
-//     // io.unobserve(entry.target)
-//   }
-// })
-
-// window.addEventListener("load", () => {
-//   const images = document.querySelectorAll('img');
-//   for (const image of images) {
-//     // check when the image becomes visible
-//     io.observe(image);
-//   }
-// })
+const io = new IntersectionObserver(entries => {
+  for (const entry of entries) {
+    if (!entry.isIntersecting) return;
+    entry.target.src = entry.target.dataset.src
+    io.unobserve(entry.target)
+  }
+})

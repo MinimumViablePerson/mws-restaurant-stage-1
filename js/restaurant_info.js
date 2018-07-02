@@ -1,4 +1,4 @@
-let restaurant;
+var restaurant;
 var map;
 
 const photographAlts = {
@@ -36,7 +36,7 @@ window.initMap = () => {
 /**
  * Get current restaurant from page URL.
  */
-fetchRestaurantFromURL = (callback) => {
+fetchRestaurantFromURL = callback => {
   if (self.restaurant) { // restaurant already fetched!
     callback(null, self.restaurant)
     return;
@@ -65,6 +65,18 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
   const name = document.getElementById('restaurant-name');
   name.innerHTML = restaurant.name;
 
+  const isFavorite = restaurant.is_favorite ?
+    JSON.parse(restaurant.is_favorite) :
+    false
+
+  const star = document.querySelector('#star-button');
+  const starIcon = document.querySelector('#star-icon');
+
+  starIcon.src = isFavorite ?
+    './assets/star-filled.png' :
+    './assets/star-empty.png'
+  star.addEventListener('click', () => toggleFavorite(restaurant));
+
   const address = document.getElementById('restaurant-address');
   address.innerHTML = restaurant.address;
 
@@ -81,7 +93,32 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
     fillRestaurantHoursHTML();
   }
   // fill reviews
-  fillReviewsHTML();
+  DBHelper.getReviewsForRestaurant(restaurant.id, fillReviewsHTML);
+}
+
+toggleFavorite = restaurant => {
+
+  const isFavorite = restaurant.is_favorite ?
+    JSON.parse(restaurant.is_favorite) :
+    false
+
+  isFavorite
+    ? removeFromFavorites(restaurant.id)
+    : addToFavorites(restaurant.id);
+}
+
+addToFavorites = restaurantId => {
+  restaurant.is_favorite = true;
+  DBHelper.addToFavorites(restaurantId);
+  const starIcon = document.querySelector('#star-icon');
+  starIcon.src = './assets/star-filled.png';
+}
+
+removeFromFavorites = restaurantId => {
+  restaurant.is_favorite = false;
+  DBHelper.removeFromFavorites(restaurantId);
+  const starIcon = document.querySelector('#star-icon');
+  starIcon.src = './assets/star-empty.png';
 }
 
 /**
@@ -104,26 +141,30 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
   }
 }
 
+appendReview = review => {
+  const ul = document.getElementById('reviews-list');
+  ul.appendChild(createReviewHTML(review));
+}
+
 /**
  * Create all reviews HTML and add them to the webpage.
  */
-fillReviewsHTML = (reviews = self.restaurant.reviews) => {
+fillReviewsHTML = (error, reviews) => {
   const container = document.getElementById('reviews-container');
   const title = document.createElement('h3');
   title.innerHTML = 'Reviews';
   title.tabIndex = '0';
   container.appendChild(title);
 
-  if (!reviews) {
+  if (error || reviews.length === 0) {
     const noReviews = document.createElement('p');
+    noReviews.classList.add('no-reviews')
     noReviews.innerHTML = 'No reviews yet!';
     container.appendChild(noReviews);
     return;
   }
   const ul = document.getElementById('reviews-list');
-  reviews.forEach(review => {
-    ul.appendChild(createReviewHTML(review));
-  });
+  reviews.forEach(appendReview);
   container.appendChild(ul);
 }
 
@@ -141,7 +182,7 @@ createReviewHTML = (review) => {
   li.appendChild(name);
 
   const date = document.createElement('p');
-  date.innerHTML = review.date;
+  date.innerHTML = formatTime(review.updatedAt);
   date.classList.add('review-date');
   li.appendChild(date);
 
@@ -158,10 +199,19 @@ createReviewHTML = (review) => {
   return li;
 }
 
+formatTime = time => {
+  const date = new Date(time);
+  const day = date.getDate();
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+
+  return `${day}/${month}/${year}`;
+}
+
 /**
  * Add restaurant name to the breadcrumb navigation menu
  */
-fillBreadcrumb = (restaurant=self.restaurant) => {
+fillBreadcrumb = (restaurant = self.restaurant) => {
   const breadcrumb = document.getElementById('breadcrumb');
   const breadcrumbElements = breadcrumb.querySelectorAll('li');
 
@@ -178,9 +228,7 @@ fillBreadcrumb = (restaurant=self.restaurant) => {
 /**
  * Get a parameter by name from page URL.
  */
-getParameterByName = (name, url) => {
-  if (!url)
-    url = window.location.href;
+getParameterByName = (name, url = window.location.href) => {
   name = name.replace(/[\[\]]/g, '\\$&');
   const regex = new RegExp(`[?&]${name}(=([^&#]*)|&|#|$)`),
     results = regex.exec(url);
@@ -190,3 +238,30 @@ getParameterByName = (name, url) => {
     return '';
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
+
+addReviewFormListener = () => {
+  const form = document.querySelector('#review-form');
+  form.addEventListener('submit', event => {
+    event.preventDefault()
+    const name = form.querySelector('#reviewer-name')
+    const rating = form.querySelector('#review-rating')
+    const comments = form.querySelector('#review-comments')
+
+    const review = {
+      restaurant_id: getParameterByName('id'),
+      name: name.value,
+      rating: parseInt(rating.value),
+      comments: comments.value
+    }
+
+    appendReview({...review, updatedAt: new Date() });
+    DBHelper.submitOrSyncReview(review);
+    DBHelper.saveSingleReviewForRestaurant(review);
+
+    name.value = ''
+    rating.value = 1
+    comments.value = ''
+  })
+}
+
+addReviewFormListener();
